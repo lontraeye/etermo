@@ -1,0 +1,62 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: 4rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  color: #4C4347;
+}
+
+.grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 3px;
+}
+
+.grid.inactive {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.grid.inactive .grid-input {
+  background-color: #4C4347;
+}
+
+.grid-input {
+  width: 81px;
+  height: 81px;
+  text-align: center;
+  font-size: 52px;
+  border: 0.125em solid #4C4347;
+  border-radius: 10%;
+  box-sizing: border-box; 
+  background-color: #998f8f;
+  caret-color: auto;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.grid-input:focus {
+  outline: none;
+  border-bottom: 0.25em solid #4C4347;
+  caret-color: transparent;
+}
+
+::selection {
+  background: rgba(0, 0, 0, 0);
+  color: inherit;
+}
