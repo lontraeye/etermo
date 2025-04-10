@@ -1,4 +1,5 @@
 import React, { KeyboardEvent, useRef, useEffect } from "react";
+import words from "./words.json";
 
 interface GridRowProps {
   row: string[];
@@ -19,12 +20,45 @@ const GridRow: React.FC<GridRowProps> = ({
 }) => {
   const inputsRef = useRef<HTMLInputElement[]>([]);
 
+  const wordKey = "altas";
+
   useEffect(() => {
     if (rowIndex === activeRow) {
       const firstInput = inputsRef.current[0];
       firstInput?.focus();
     }
   }, [activeRow, rowIndex]);
+
+  const compareWords = (typedWord: string, keyWord: string): string[] => {
+    const colors: string[] = Array(typedWord.length).fill("");
+    const keyLetterCounts: Record<string, number> = {};
+
+    for (const char of keyWord) {
+      keyLetterCounts[char] = (keyLetterCounts[char] || 0) + 1;
+    }
+
+    for (let i = 0; i < typedWord.length; i++) {
+      if (typedWord[i] === keyWord[i]) {
+        colors[i] = "green";
+        keyLetterCounts[typedWord[i]]--;
+      }
+    }
+
+    for (let i = 0; i < typedWord.length; i++) {
+      if (colors[i] === "" && keyWord.includes(typedWord[i]) && keyLetterCounts[typedWord[i]] > 0) {
+        colors[i] = "yellow";
+        keyLetterCounts[typedWord[i]]--;
+      }
+    }
+
+    for (let i = 0; i < typedWord.length; i++) {
+      if (colors[i] === "") {
+        colors[i] = "gray";
+      }
+    }
+
+    return colors;
+  };
 
   const handleKeyDown = (
     colIndex: number,
@@ -56,14 +90,46 @@ const GridRow: React.FC<GridRowProps> = ({
     }
 
     if (event.key === "Enter" && rowIndex === activeRow) {
+      const currentWord = values[rowIndex].join("").toLowerCase();
       if (values[rowIndex].every((char) => char !== "")) {
-        setActiveRow((prevActiveRow) => prevActiveRow + 1);
+        if (!words.includes(currentWord)) {
+          inputsRef.current.forEach((input) => {
+            input.classList.add("shake");
+          });
+          setTimeout(() => {
+            inputsRef.current.forEach((input) => {
+              input.classList.remove("shake");
+            });
+          }, 300);
+        } else {
+          const colors = compareWords(currentWord, wordKey);
+
+          for (let i = 0; i < colors.length; i++) {
+            const input = inputsRef.current[i];
+            if (input) {
+              input.classList.remove("green", "yellow", "gray");
+              if (colors[i] === "green") {
+                input.classList.add("green");
+              } else if (colors[i] === "yellow") {
+                input.classList.add("yellow");
+              } else if (colors[i] === "gray") {
+                input.classList.add("gray");
+              }
+            }
+          }
+
+          setActiveRow((prevActiveRow) => prevActiveRow + 1);
+        }
       }
     }
   };
 
   return (
-    <div className={`grid ${rowIndex === activeRow ? "" : "inactive"}`}>
+    <div
+      className={`grid ${rowIndex < activeRow ? "passed" : ""} ${
+        rowIndex > activeRow ? "inactive" : ""
+      }`}
+    >
       {row.map((value, colIndex) => (
         <input
           key={colIndex}
@@ -90,7 +156,7 @@ const GridRow: React.FC<GridRowProps> = ({
           }}
           onKeyDown={(e) => handleKeyDown(colIndex, e)}
           onFocus={(e) => e.target.select()}
-          disabled={rowIndex > activeRow}
+          disabled={rowIndex !== activeRow}
         />
       ))}
     </div>
