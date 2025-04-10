@@ -33,6 +33,12 @@ h1 {
   opacity: 1;
 }
 
+.grid.passed .grid-input {
+  background-color: #4C4347;
+  border-color: #4C4347;
+  color: white;
+}
+
 .grid.inactive {
   pointer-events: none;
   opacity: 0.5;
@@ -71,22 +77,39 @@ h1 {
   transition: background-color 0.3s ease;
 }
 
-.grid-input.green {
-  background-color: #6aaa64 !important;
-  border-color: #6aaa64 !important;
+.grid .grid-input.green {
+  background-color: #6aaa64;
+  border-color: #6aaa64;
   color: white;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.grid .grid-input.yellow {
+  background-color: #d3ad69;
+  border-color: #d3ad69;
+  color: white;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.grid .grid-input.gray {
+  background-color: #4C4347;
+  border-color: #4C4347;
+  color: white;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .grid-input.yellow {
-  background-color: #d3ad69 !important;
-  border-color: #d3ad69 !important;
+  background-color: #d3ad69;
+  border-color: #d3ad69;
   color: white;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .grid-input.gray {
-  background-color: #4C4347 !important;
-  border-color: #4C4347 !important;
+  background-color: #4C4347;
+  border-color: #4C4347;
   color: white;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .grid-input:focus {

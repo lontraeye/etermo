@@ -4,9 +4,9 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dicFilePath = path.join(__dirname, "pt_BR.dic");
+const dicFilePath = path.join(__dirname, "palavras-comuns.dic");
 
-const jsonFilePath = path.join(__dirname, "words.json");
+const jsonFilePath = path.join(__dirname, "palavras-comuns.json");
 
 async function convertDicToJson() {
   try {
