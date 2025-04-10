@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import GridRow from "./GridRow";
 import words from "./palavras-comuns.json";
 
+type RowStatus = "active" | "completed" | "locked";
+
 function App() {
   const [values, setValues] = useState<string[][]>(
-    Array(6).fill(Array(5).fill(""))
+    Array(6).fill(null).map(() => Array(5).fill(""))
   );
-  const [activeRow, setActiveRow] = useState<number>(0);
+
+  const [rowStatuses, setRowStatuses] = useState<RowStatus[]>(
+    Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked"))
+  );
 
   const [shuffledWords, setShuffledWords] = useState(() => {
     const shuffled = [...words].sort(() => Math.random() - 0.5);
@@ -15,6 +20,8 @@ function App() {
   });
 
   const [wordKey, setWordKey] = useState(shuffledWords[0]);
+  const [showContinueButton, setShowContinueButton] = useState(false);
+  const [showRetryButton, setShowRetryButton] = useState(false);
 
   console.log(`Palavra-chave: ${wordKey}`);
 
@@ -27,8 +34,10 @@ function App() {
     const newShuffledWords = [...words].sort(() => Math.random() - 0.5);
     setShuffledWords(newShuffledWords);
     setWordKey(newShuffledWords[0]);
-    setValues(Array(6).fill(Array(5).fill("")));
-    setActiveRow(0);
+    setValues(Array(6).fill(null).map(() => Array(5).fill("")));
+    setRowStatuses(Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked")));
+    setShowContinueButton(false);
+    setShowRetryButton(false);
 
     const inputs = document.querySelectorAll(".grid-input");
     inputs.forEach((input) => {
@@ -41,6 +50,14 @@ function App() {
     }, 0);
   };
 
+  const handleWin = () => {
+    setShowContinueButton(true);
+  };
+
+  const handleGameOver = () => {
+    setShowRetryButton(true);
+  };
+
   return (
     <div className="grid-container">
       <h1>ETERMO</h1>
@@ -49,14 +66,25 @@ function App() {
           key={rowIndex}
           row={row}
           rowIndex={rowIndex}
-          activeRow={activeRow}
-          setActiveRow={setActiveRow}
           values={values}
           setValues={setValues}
           wordKey={wordKey}
-          resetGame={resetGame}
+          status={rowStatuses[rowIndex]}
+          setRowStatuses={setRowStatuses}
+          onWin={handleWin}
+          onGameOver={handleGameOver}
         />
       ))}
+      {showContinueButton && (
+        <button onClick={resetGame} className="continue-button">
+          Continuar?
+        </button>
+      )}
+      {showRetryButton && (
+        <button onClick={resetGame} className="retry-button">
+          Tentar novamente
+        </button>
+      )}
     </div>
   );
 }
