@@ -3,7 +3,6 @@ import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
 import { RowStatus } from "./Types";
-import { resetGameState } from "./Utils"; // Importando a função de reset do game
 import words from "./palavras-comuns.json";
 
 function App() {
@@ -15,52 +14,78 @@ function App() {
     Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked"))
   );
 
-  const [shuffledWords, setShuffledWords] = useState(() => {
-    const shuffled = [...words].sort(() => Math.random() - 0.5);
-    return shuffled;
-  });
+  const [wordKey] = useState(words[0]);
 
-  const [wordKey, setWordKey] = useState(shuffledWords[0]);
-  const [showContinueButton, setShowContinueButton] = useState(false);
-  const [showRetryButton, setShowRetryButton] = useState(false);
-
-  console.log(`Palavra-chave: ${wordKey}`);
+  const [activeIndices, setActiveIndices] = useState<number[]>(
+    Array(6).fill(0)
+  );
 
   useEffect(() => {
     const firstInput = document.querySelector<HTMLInputElement>(".grid-input");
     firstInput?.focus();
   }, []);
 
-  const resetGame = () => {
-    const { newShuffledWords, newWordKey, newValues, newRowStatuses } = resetGameState(words);
-    setShuffledWords(newShuffledWords);
-    setWordKey(newWordKey);
-    setValues(newValues);
-    setRowStatuses(newRowStatuses);
-    setShowContinueButton(false);
-    setShowRetryButton(false);
+  useEffect(() => {
+    const handlePhysicalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Backspace") {
+        handleKeyPress("Backspace");
+      } else if (e.key === "Enter") {
+        handleKeyPress("Enter");
+      } else if (/^[a-zA-Z]$/.test(e.key)) {
+        handleKeyPress(e.key.toLowerCase());
+      }
+    };
 
-    const inputs = document.querySelectorAll(".grid-input");
-    inputs.forEach((input) => {
-      input.classList.remove("green", "yellow", "gray");
-    });
-
-    setTimeout(() => {
-      const firstInput = document.querySelector<HTMLInputElement>(".grid-input");
-      firstInput?.focus();
-    }, 0);
-  };
-
-  const handleWin = () => {
-    setShowContinueButton(true);
-  };
-
-  const handleGameOver = () => {
-    setShowRetryButton(true);
-  };
+    window.addEventListener("keydown", handlePhysicalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handlePhysicalKeyDown);
+    };
+  }, [values, rowStatuses, activeIndices]);
 
   const handleKeyPress = (key: string) => {
-    console.log("Tecla pressionada:", key);
+    const currentRowIndex = rowStatuses.findIndex(status => status === "active");
+    if (currentRowIndex === -1) return;
+
+    const currentRow = [...values[currentRowIndex]];
+    const currentIndex = activeIndices[currentRowIndex];
+
+    if (key === "Backspace") {
+      if (currentRow[currentIndex]) {
+        currentRow[currentIndex] = "";
+      } else if (currentIndex > 0) {
+        currentRow[currentIndex - 1] = "";
+        updateActiveIndex(currentRowIndex, currentIndex - 1);
+      }
+    } else if (key === "Enter") {
+      if (currentRow.every(cell => cell !== "")) {
+        const newRowStatuses = [...rowStatuses];
+        newRowStatuses[currentRowIndex] = "completed";
+        if (currentRowIndex + 1 < rowStatuses.length) {
+          newRowStatuses[currentRowIndex + 1] = "active";
+        }
+        setRowStatuses(newRowStatuses);
+        updateActiveIndex(currentRowIndex + 1, 0);
+      }
+    } else if (key.length === 1) {
+      if (currentIndex < currentRow.length) {
+        currentRow[currentIndex] = key.toLowerCase();
+        if (currentIndex < 4) {
+          updateActiveIndex(currentRowIndex, currentIndex + 1);
+        }
+      }
+    }
+
+    const newValues = [...values];
+    newValues[currentRowIndex] = currentRow;
+    setValues(newValues);
+  };
+
+  const updateActiveIndex = (rowIndex: number, index: number) => {
+    setActiveIndices(prev => {
+      const updated = [...prev];
+      updated[rowIndex] = index;
+      return updated;
+    });
   };
 
   return (
@@ -76,21 +101,11 @@ function App() {
           wordKey={wordKey}
           status={rowStatuses[rowIndex]}
           setRowStatuses={setRowStatuses}
-          onWin={handleWin}
-          onGameOver={handleGameOver}
+          activeIndex={activeIndices[rowIndex]}
+          setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
         />
       ))}
       <Keyboard onKeyPress={handleKeyPress} />
-      {showContinueButton && (
-        <button onClick={resetGame} className="continue-button">
-          Continuar?
-        </button>
-      )}
-      {showRetryButton && (
-        <button onClick={resetGame} className="retry-button">
-          Tentar novamente
-        </button>
-      )}
     </div>
   );
 }
