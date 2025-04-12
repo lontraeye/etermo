@@ -33,7 +33,7 @@ function App() {
         handleKeyPress("Backspace");
       } else if (e.key === "Enter") {
         handleKeyPress("Enter");
-      } else if (/^[a-zA-ZÀ-ÖØ-öø-ÿ]$/.test(e.key)) { // Aceita caracteres acentuados
+      } else if (/^[a-zA-ZÀ-ÖØ-öø-ÿ]$/.test(e.key)) {
         handleKeyPress(e.key.toLowerCase());
       }
     };
@@ -63,25 +63,21 @@ function App() {
         const word = currentRow.join("");
         const normalizedWord = normalizeWord(word);
 
-        // Verifica se a palavra existe no dicionário (com ou sem acento)
         const validWords = [...words, ...comuns].map(w => normalizeWord(w));
         if (!validWords.includes(normalizedWord)) {
           triggerShakeAnimation(currentRowIndex);
           return;
         }
 
-        // Restaura os acentos corretos antes de marcar como completada
         const wordWithAccents = restoreAccents(word, wordKey);
         const newRow = wordWithAccents.split("");
 
-        // Atualiza os valores com a versão correta dos acentos
         setValues(prev => {
           const newValues = [...prev];
           newValues[currentRowIndex] = newRow;
           return newValues;
         });
 
-        // Marca a linha como completada e ativa a próxima
         setRowStatuses(prev => {
           const newRowStatuses = [...prev];
           newRowStatuses[currentRowIndex] = "completed";
@@ -92,7 +88,7 @@ function App() {
         });
         
         updateActiveIndex(currentRowIndex + 1, 0);
-        return; // Evita a atualização duplicada
+        return;
       }
     } else if (key.length === 1) {
       if (currentIndex < currentRow.length) {
@@ -103,7 +99,6 @@ function App() {
       }
     }
 
-    // Atualização normal (para teclas que não sejam Enter)
     setValues(prev => {
       const newValues = [...prev];
       newValues[currentRowIndex] = currentRow;

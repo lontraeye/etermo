@@ -45,7 +45,6 @@ const GridRow: React.FC<GridRowProps> = ({
       const currentWord = values[rowIndex].join("");
       const restoredWord = restoreAccents(currentWord, wordKey);
       
-      // Notifica o componente pai sobre a palavra com acentos corrigidos
       if (restoredWord !== currentWord && onRestoreAccents) {
         onRestoreAccents(rowIndex, restoredWord);
       }
