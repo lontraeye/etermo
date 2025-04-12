@@ -3,7 +3,9 @@ import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
 import { RowStatus } from "./Types";
-import words from "./palavras-comuns.json";
+import comuns from "./palavras-comuns.json";
+import words from "./words.json";
+import { normalizeWord, restoreAccents } from "./Utils";
 
 function App() {
   const [values, setValues] = useState<string[][]>(
@@ -14,11 +16,11 @@ function App() {
     Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked"))
   );
 
-  const [wordKey] = useState(words[0]);
+  const [wordKey] = useState(comuns[0]);
+  const [activeIndices, setActiveIndices] = useState<number[]>(Array(6).fill(0));
+  const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
 
-  const [activeIndices, setActiveIndices] = useState<number[]>(
-    Array(6).fill(0)
-  );
+  console.log("Palavra chave:", wordKey);
 
   useEffect(() => {
     const firstInput = document.querySelector<HTMLInputElement>(".grid-input");
@@ -31,7 +33,7 @@ function App() {
         handleKeyPress("Backspace");
       } else if (e.key === "Enter") {
         handleKeyPress("Enter");
-      } else if (/^[a-zA-Z]$/.test(e.key)) {
+      } else if (/^[a-zA-ZÀ-ÖØ-öø-ÿ]$/.test(e.key)) { // Aceita caracteres acentuados
         handleKeyPress(e.key.toLowerCase());
       }
     };
@@ -58,13 +60,39 @@ function App() {
       }
     } else if (key === "Enter") {
       if (currentRow.every(cell => cell !== "")) {
-        const newRowStatuses = [...rowStatuses];
-        newRowStatuses[currentRowIndex] = "completed";
-        if (currentRowIndex + 1 < rowStatuses.length) {
-          newRowStatuses[currentRowIndex + 1] = "active";
+        const word = currentRow.join("");
+        const normalizedWord = normalizeWord(word);
+
+        // Verifica se a palavra existe no dicionário (com ou sem acento)
+        const validWords = [...words, ...comuns].map(w => normalizeWord(w));
+        if (!validWords.includes(normalizedWord)) {
+          triggerShakeAnimation(currentRowIndex);
+          return;
         }
-        setRowStatuses(newRowStatuses);
+
+        // Restaura os acentos corretos antes de marcar como completada
+        const wordWithAccents = restoreAccents(word, wordKey);
+        const newRow = wordWithAccents.split("");
+
+        // Atualiza os valores com a versão correta dos acentos
+        setValues(prev => {
+          const newValues = [...prev];
+          newValues[currentRowIndex] = newRow;
+          return newValues;
+        });
+
+        // Marca a linha como completada e ativa a próxima
+        setRowStatuses(prev => {
+          const newRowStatuses = [...prev];
+          newRowStatuses[currentRowIndex] = "completed";
+          if (currentRowIndex + 1 < prev.length) {
+            newRowStatuses[currentRowIndex + 1] = "active";
+          }
+          return newRowStatuses;
+        });
+        
         updateActiveIndex(currentRowIndex + 1, 0);
+        return; // Evita a atualização duplicada
       }
     } else if (key.length === 1) {
       if (currentIndex < currentRow.length) {
@@ -75,9 +103,17 @@ function App() {
       }
     }
 
-    const newValues = [...values];
-    newValues[currentRowIndex] = currentRow;
-    setValues(newValues);
+    // Atualização normal (para teclas que não sejam Enter)
+    setValues(prev => {
+      const newValues = [...prev];
+      newValues[currentRowIndex] = currentRow;
+      return newValues;
+    });
+  };
+
+  const triggerShakeAnimation = (rowIndex: number) => {
+    setShakingRowIndex(rowIndex);
+    setTimeout(() => setShakingRowIndex(null), 600);
   };
 
   const updateActiveIndex = (rowIndex: number, index: number) => {
@@ -97,12 +133,11 @@ function App() {
           row={row}
           rowIndex={rowIndex}
           values={values}
-          setValues={setValues}
           wordKey={wordKey}
           status={rowStatuses[rowIndex]}
-          setRowStatuses={setRowStatuses}
           activeIndex={activeIndices[rowIndex]}
           setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
+          isShaking={shakingRowIndex === rowIndex}
         />
       ))}
       <Keyboard onKeyPress={handleKeyPress} />

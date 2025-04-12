@@ -1,45 +1,62 @@
 import React, { useEffect, useRef } from "react";
 import { RowStatus } from "../../Types";
-import { compareWords } from "../../Utils";
+import { restoreAccents, compareWords } from "../../Utils";
+import "./GridRow.css";
 
 interface GridRowProps {
   row: string[];
   rowIndex: number;
   values: string[][];
-  setValues: React.Dispatch<React.SetStateAction<string[][]>>;
   wordKey: string;
   status: RowStatus;
-  setRowStatuses: React.Dispatch<React.SetStateAction<RowStatus[]>>;
   activeIndex: number;
   setActiveIndex: (index: number) => void;
+  isShaking: boolean;
+  onRestoreAccents?: (rowIndex: number, restoredWord: string) => void;
 }
 
 const GridRow: React.FC<GridRowProps> = ({
   row,
   rowIndex,
   values,
-  setValues,
   wordKey,
   status,
-  setRowStatuses,
   activeIndex,
   setActiveIndex,
+  isShaking,
+  onRestoreAccents,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isShaking && containerRef.current) {
+      const el = containerRef.current;
+      el.classList.remove("shake");
+      void el.offsetWidth;
+      el.classList.add("shake");
+      const handleAnimationEnd = () => el.classList.remove("shake");
+      el.addEventListener('animationend', handleAnimationEnd, { once: true });
+      return () => el.removeEventListener('animationend', handleAnimationEnd);
+    }
+  }, [isShaking]);
+
+  useEffect(() => {
+    if (status === "completed") {
+      const currentWord = values[rowIndex].join("");
+      const restoredWord = restoreAccents(currentWord, wordKey);
+      
+      // Notifica o componente pai sobre a palavra com acentos corrigidos
+      if (restoredWord !== currentWord && onRestoreAccents) {
+        onRestoreAccents(rowIndex, restoredWord);
+      }
+    }
+  }, [status, values, wordKey, rowIndex, onRestoreAccents]);
 
   const handleClick = (index: number) => {
     if (status === "active") {
       setActiveIndex(index);
     }
   };
-
-  useEffect(() => {
-    if (status === "active" && activeIndex === 0) {
-      const firstEmpty = values[rowIndex].findIndex((c) => c === "");
-      const fallbackIndex = firstEmpty === -1 ? row.length - 1 : firstEmpty;
-      setActiveIndex(fallbackIndex);
-    }
-  }, [status, values, rowIndex]);
 
   return (
     <div
