@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
@@ -10,47 +10,92 @@ import { normalizeWord, restoreAccents } from "./Utils";
 
 function App() {
   const [values, setValues] = useState<string[][]>(
-    Array(6).fill(null).map(() => Array(5).fill(""))
+    Array(6)
+      .fill(null)
+      .map(() => Array(5).fill(""))
   );
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const isScrolledToBottom =
+        container.scrollHeight - container.scrollTop <=
+        container.clientHeight + 1;
+      container.classList.toggle("scrolled-to-bottom", isScrolledToBottom);
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const [rowStatuses, setRowStatuses] = useState<RowStatus[]>(
-    Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked"))
+    Array(6)
+      .fill("locked")
+      .map((_, i) => (i === 0 ? "active" : "locked"))
   );
 
   const [wordKey, setWordKey] = useState("");
-  const [activeIndices, setActiveIndices] = useState<number[]>(Array(6).fill(0));
+  const [activeIndices, setActiveIndices] = useState<number[]>(
+    Array(6).fill(0)
+  );
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
-  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
+  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">(
+    "playing"
+  );
   const [usedWords, setUsedWords] = useState<string[]>([]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     startNewGame();
   }, []);
 
+  useEffect(() => {
+    const activeRowIndex = rowStatuses.findIndex(
+      (status) => status === "active"
+    );
+    if (containerRef.current && activeRowIndex !== -1) {
+      const rowElement = containerRef.current.children[
+        activeRowIndex + 1
+      ] as HTMLElement; // +1 por causa do h1
+      rowElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [rowStatuses]);
+
   const startNewGame = () => {
-    const availableWords = comuns.filter(word => !usedWords.includes(word));
-    
+    const availableWords = comuns.filter((word) => !usedWords.includes(word));
+
     if (availableWords.length === 0) {
       setUsedWords([]);
     }
 
-    const randomWord = availableWords.length > 0 
-      ? availableWords[Math.floor(Math.random() * availableWords.length)]
-      : comuns[Math.floor(Math.random() * comuns.length)];
-    
+    const randomWord =
+      availableWords.length > 0
+        ? availableWords[Math.floor(Math.random() * availableWords.length)]
+        : comuns[Math.floor(Math.random() * comuns.length)];
+
     setWordKey(randomWord);
-    setUsedWords(prev => [...prev, randomWord]);
-    setValues(Array(6).fill(null).map(() => Array(5).fill("")));
-    setRowStatuses(Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked")));
+    setUsedWords((prev) => [...prev, randomWord]);
+    setValues(
+      Array(6)
+        .fill(null)
+        .map(() => Array(5).fill(""))
+    );
+    setRowStatuses(
+      Array(6)
+        .fill("locked")
+        .map((_, i) => (i === 0 ? "active" : "locked"))
+    );
     setActiveIndices(Array(6).fill(0));
     setGameStatus("playing");
     console.log("Nova palavra chave:", randomWord);
   };
-
-  useEffect(() => {
-    const firstInput = document.querySelector<HTMLInputElement>(".grid-input");
-    firstInput?.focus();
-  }, [values]);
 
   useEffect(() => {
     const handlePhysicalKeyDown = (e: KeyboardEvent) => {
@@ -72,7 +117,9 @@ function App() {
   const handleKeyPress = (key: string) => {
     if (gameStatus !== "playing") return;
 
-    const currentRowIndex = rowStatuses.findIndex(status => status === "active");
+    const currentRowIndex = rowStatuses.findIndex(
+      (status) => status === "active"
+    );
     if (currentRowIndex === -1) return;
 
     const currentRow = [...values[currentRowIndex]];
@@ -86,11 +133,11 @@ function App() {
         updateActiveIndex(currentRowIndex, currentIndex - 1);
       }
     } else if (key === "Enter") {
-      if (currentRow.every(cell => cell !== "")) {
+      if (currentRow.every((cell) => cell !== "")) {
         const word = currentRow.join("");
         const normalizedWord = normalizeWord(word);
 
-        const validWords = [...words, ...comuns].map(w => normalizeWord(w));
+        const validWords = [...words, ...comuns].map((w) => normalizeWord(w));
         if (!validWords.includes(normalizedWord)) {
           triggerShakeAnimation(currentRowIndex);
           return;
@@ -99,15 +146,14 @@ function App() {
         const wordWithAccents = restoreAccents(word, wordKey);
         const newRow = wordWithAccents.split("");
 
-        setValues(prev => {
+        setValues((prev) => {
           const newValues = [...prev];
           newValues[currentRowIndex] = newRow;
           return newValues;
         });
 
-        // Move win/lose check to GridRow's onRowCompleted
         if (currentRowIndex < 5) {
-          setRowStatuses(prev => {
+          setRowStatuses((prev) => {
             const newRowStatuses = [...prev];
             newRowStatuses[currentRowIndex] = "completed";
             newRowStatuses[currentRowIndex + 1] = "active";
@@ -115,7 +161,7 @@ function App() {
           });
           updateActiveIndex(currentRowIndex + 1, 0);
         } else {
-          setRowStatuses(prev => {
+          setRowStatuses((prev) => {
             const newRowStatuses = [...prev];
             newRowStatuses[currentRowIndex] = "completed";
             return newRowStatuses;
@@ -132,7 +178,7 @@ function App() {
       }
     }
 
-    setValues(prev => {
+    setValues((prev) => {
       const newValues = [...prev];
       newValues[currentRowIndex] = currentRow;
       return newValues;
@@ -148,7 +194,7 @@ function App() {
   };
 
   const handleRestoreAccents = (rowIndex: number, restoredWord: string) => {
-    setValues(prev => {
+    setValues((prev) => {
       const newValues = [...prev];
       newValues[rowIndex] = restoredWord.split("");
       return newValues;
@@ -161,7 +207,7 @@ function App() {
   };
 
   const updateActiveIndex = (rowIndex: number, index: number) => {
-    setActiveIndices(prev => {
+    setActiveIndices((prev) => {
       const updated = [...prev];
       updated[rowIndex] = index;
       return updated;
@@ -171,23 +217,28 @@ function App() {
   return (
     <div className="grid-container">
       <h1>ETERMO</h1>
-      {values.map((row, rowIndex) => (
-        <GridRow
-          key={rowIndex}
-          row={row}
-          rowIndex={rowIndex}
-          values={values}
-          wordKey={wordKey}
-          status={rowStatuses[rowIndex]}
-          activeIndex={activeIndices[rowIndex]}
-          setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
-          isShaking={shakingRowIndex === rowIndex}
-          onRestoreAccents={handleRestoreAccents}
-          onRowCompleted={() => handleRowCompleted(rowIndex, values[rowIndex].join(""))}
-        />
-      ))}
-      <Keyboard onKeyPress={handleKeyPress} />
-
+      <div className="palavras" ref={containerRef}>
+        {values.map((row, rowIndex) => (
+          <GridRow
+            key={rowIndex}
+            row={row}
+            rowIndex={rowIndex}
+            values={values}
+            wordKey={wordKey}
+            status={rowStatuses[rowIndex]}
+            activeIndex={activeIndices[rowIndex]}
+            setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
+            isShaking={shakingRowIndex === rowIndex}
+            onRestoreAccents={handleRestoreAccents}
+            onRowCompleted={() =>
+              handleRowCompleted(rowIndex, values[rowIndex].join(""))
+            }
+          />
+        ))}
+      </div>
+      <div className="keyboard-container">
+        <Keyboard onKeyPress={handleKeyPress} />
+      </div>
       <GameOverModal
         isOpen={gameStatus !== "playing"}
         isWinner={gameStatus === "won"}

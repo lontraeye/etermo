@@ -122,3 +122,11 @@
   .grid.shake {
     animation: gentleShake 0.2s ease-in-out both;
   }
+
+  @media (max-width: 768px) {
+    .grid-input {
+      max-width: 4rem;
+      height: 4rem;
+      font-size: 32px;
+    }
+  }

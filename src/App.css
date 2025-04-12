@@ -3,6 +3,7 @@
   margin: 0 auto;
   text-align: center;
   user-select: none;
+  overflow: hidden;
 }
 
 h1 {
@@ -50,4 +51,49 @@ h1 {
 
 .retry-button:hover {
   background-color: #d9534f;
+}
+
+.palavras {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  position: relative; /* Adicionado para posicionar o pseudo-elemento */
+}
+
+@media (max-width: 768px) {
+  .palavras {
+    max-width: 95vw;
+    padding: 0 5px;
+    max-height: 60vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .palavras::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Ajuste para quando o scroll chegar ao final */
+  .palavras.scrolled-to-bottom::after {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  h1 {
+    font-size: 3rem;
+  }
+
+  .keyboard-container {
+    width: 100%;
+    max-width: 95vw;
+    margin: 0 auto;
+    padding: 0 5px;
+  }
 }
