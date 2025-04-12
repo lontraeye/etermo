@@ -13,6 +13,7 @@ interface GridRowProps {
   setActiveIndex: (index: number) => void;
   isShaking: boolean;
   onRestoreAccents?: (rowIndex: number, restoredWord: string) => void;
+  onRowCompleted?: () => void;
 }
 
 const GridRow: React.FC<GridRowProps> = ({
@@ -25,6 +26,7 @@ const GridRow: React.FC<GridRowProps> = ({
   setActiveIndex,
   isShaking,
   onRestoreAccents,
+  onRowCompleted,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -47,9 +49,14 @@ const GridRow: React.FC<GridRowProps> = ({
       
       if (restoredWord !== currentWord && onRestoreAccents) {
         onRestoreAccents(rowIndex, restoredWord);
+        return;
+      }
+
+      if (onRowCompleted) {
+        setTimeout(() => onRowCompleted(), 100);
       }
     }
-  }, [status, values, wordKey, rowIndex, onRestoreAccents]);
+  }, [status, values, wordKey, rowIndex, onRestoreAccents, onRowCompleted]);
 
   const handleClick = (index: number) => {
     if (status === "active") {
@@ -67,6 +74,7 @@ const GridRow: React.FC<GridRowProps> = ({
       {row.map((_, colIndex) => {
         const value = values[rowIndex][colIndex];
         let color = "";
+        
         if (status !== "active") {
           const word = values[rowIndex].join("").toLowerCase();
           const colors = compareWords(word, wordKey);

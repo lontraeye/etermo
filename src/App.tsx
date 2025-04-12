@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
+import GameOverModal from "./components/modal/GameOverModal"; // Novo componente
 import { RowStatus } from "./Types";
 import comuns from "./palavras-comuns.json";
 import words from "./words.json";
@@ -16,16 +17,40 @@ function App() {
     Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked"))
   );
 
-  const [wordKey] = useState(comuns[0]);
+  const [wordKey, setWordKey] = useState("");
   const [activeIndices, setActiveIndices] = useState<number[]>(Array(6).fill(0));
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
+  const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
+  const [usedWords, setUsedWords] = useState<string[]>([]);
 
-  console.log("Palavra chave:", wordKey);
+  useEffect(() => {
+    startNewGame();
+  }, []);
+
+  const startNewGame = () => {
+    const availableWords = comuns.filter(word => !usedWords.includes(word));
+    
+    if (availableWords.length === 0) {
+      setUsedWords([]);
+    }
+
+    const randomWord = availableWords.length > 0 
+      ? availableWords[Math.floor(Math.random() * availableWords.length)]
+      : comuns[Math.floor(Math.random() * comuns.length)];
+    
+    setWordKey(randomWord);
+    setUsedWords(prev => [...prev, randomWord]);
+    setValues(Array(6).fill(null).map(() => Array(5).fill("")));
+    setRowStatuses(Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked")));
+    setActiveIndices(Array(6).fill(0));
+    setGameStatus("playing");
+    console.log("Nova palavra chave:", randomWord);
+  };
 
   useEffect(() => {
     const firstInput = document.querySelector<HTMLInputElement>(".grid-input");
     firstInput?.focus();
-  }, []);
+  }, [values]);
 
   useEffect(() => {
     const handlePhysicalKeyDown = (e: KeyboardEvent) => {
@@ -45,6 +70,8 @@ function App() {
   }, [values, rowStatuses, activeIndices]);
 
   const handleKeyPress = (key: string) => {
+    if (gameStatus !== "playing") return;
+
     const currentRowIndex = rowStatuses.findIndex(status => status === "active");
     if (currentRowIndex === -1) return;
 
@@ -78,12 +105,20 @@ function App() {
           return newValues;
         });
 
+        if (normalizedWord === normalizeWord(wordKey)) {
+          setGameStatus("won");
+          return;
+        }
+
+        if (currentRowIndex === 5) {
+          setGameStatus("lost");
+          return;
+        }
+
         setRowStatuses(prev => {
           const newRowStatuses = [...prev];
           newRowStatuses[currentRowIndex] = "completed";
-          if (currentRowIndex + 1 < prev.length) {
-            newRowStatuses[currentRowIndex + 1] = "active";
-          }
+          newRowStatuses[currentRowIndex + 1] = "active";
           return newRowStatuses;
         });
         
@@ -136,6 +171,13 @@ function App() {
         />
       ))}
       <Keyboard onKeyPress={handleKeyPress} />
+
+      <GameOverModal
+        isOpen={gameStatus !== "playing"}
+        isWinner={gameStatus === "won"}
+        onClose={startNewGame}
+        wordKey={wordKey}
+      />
     </div>
   );
 }
