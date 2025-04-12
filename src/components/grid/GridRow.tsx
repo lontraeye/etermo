@@ -53,7 +53,7 @@ const GridRow: React.FC<GridRowProps> = ({
       }
 
       if (onRowCompleted) {
-        setTimeout(() => onRowCompleted(), 100);
+        onRowCompleted();
       }
     }
   }, [status, values, wordKey, rowIndex, onRestoreAccents, onRowCompleted]);
@@ -75,7 +75,7 @@ const GridRow: React.FC<GridRowProps> = ({
         const value = values[rowIndex][colIndex];
         let color = "";
         
-        if (status !== "active") {
+        if (status === "completed") {
           const word = values[rowIndex].join("").toLowerCase();
           const colors = compareWords(word, wordKey);
           color = colors[colIndex];

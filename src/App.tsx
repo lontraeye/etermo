@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
-import GameOverModal from "./components/modal/GameOverModal"; // Novo componente
+import GameOverModal from "./components/modal/GameOverModal";
 import { RowStatus } from "./Types";
 import comuns from "./palavras-comuns.json";
 import words from "./words.json";
@@ -105,24 +105,22 @@ function App() {
           return newValues;
         });
 
-        if (normalizedWord === normalizeWord(wordKey)) {
-          setGameStatus("won");
-          return;
+        // Move win/lose check to GridRow's onRowCompleted
+        if (currentRowIndex < 5) {
+          setRowStatuses(prev => {
+            const newRowStatuses = [...prev];
+            newRowStatuses[currentRowIndex] = "completed";
+            newRowStatuses[currentRowIndex + 1] = "active";
+            return newRowStatuses;
+          });
+          updateActiveIndex(currentRowIndex + 1, 0);
+        } else {
+          setRowStatuses(prev => {
+            const newRowStatuses = [...prev];
+            newRowStatuses[currentRowIndex] = "completed";
+            return newRowStatuses;
+          });
         }
-
-        if (currentRowIndex === 5) {
-          setGameStatus("lost");
-          return;
-        }
-
-        setRowStatuses(prev => {
-          const newRowStatuses = [...prev];
-          newRowStatuses[currentRowIndex] = "completed";
-          newRowStatuses[currentRowIndex + 1] = "active";
-          return newRowStatuses;
-        });
-        
-        updateActiveIndex(currentRowIndex + 1, 0);
         return;
       }
     } else if (key.length === 1) {
@@ -137,6 +135,22 @@ function App() {
     setValues(prev => {
       const newValues = [...prev];
       newValues[currentRowIndex] = currentRow;
+      return newValues;
+    });
+  };
+
+  const handleRowCompleted = (rowIndex: number, completedWord: string) => {
+    if (normalizeWord(completedWord) === normalizeWord(wordKey)) {
+      setGameStatus("won");
+    } else if (rowIndex === 5) {
+      setGameStatus("lost");
+    }
+  };
+
+  const handleRestoreAccents = (rowIndex: number, restoredWord: string) => {
+    setValues(prev => {
+      const newValues = [...prev];
+      newValues[rowIndex] = restoredWord.split("");
       return newValues;
     });
   };
@@ -168,6 +182,8 @@ function App() {
           activeIndex={activeIndices[rowIndex]}
           setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
           isShaking={shakingRowIndex === rowIndex}
+          onRestoreAccents={handleRestoreAccents}
+          onRowCompleted={() => handleRowCompleted(rowIndex, values[rowIndex].join(""))}
         />
       ))}
       <Keyboard onKeyPress={handleKeyPress} />
