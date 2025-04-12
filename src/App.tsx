@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import GridRow from "./GridRow";
+import GridRow from "./components/grid/GridRow";
+import Keyboard from "./components/keyboard/Keyboard";
 import words from "./palavras-comuns.json";
 
 type RowStatus = "active" | "completed" | "locked";
@@ -58,6 +59,11 @@ function App() {
     setShowRetryButton(true);
   };
 
+  const handleKeyPress = (key: string) => {
+    console.log("Tecla pressionada:", key);
+    // Adicione lógica para lidar com a tecla pressionada
+  };
+
   return (
     <div className="grid-container">
       <h1>ETERMO</h1>
@@ -75,6 +81,7 @@ function App() {
           onGameOver={handleGameOver}
         />
       ))}
+      <Keyboard onKeyPress={handleKeyPress} />
       {showContinueButton && (
         <button onClick={resetGame} className="continue-button">
           Continuar?
