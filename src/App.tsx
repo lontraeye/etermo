@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
+import { RowStatus } from "./Types";
+import { resetGameState } from "./Utils"; // Importando a função de reset do game
 import words from "./palavras-comuns.json";
-
-type RowStatus = "active" | "completed" | "locked";
 
 function App() {
   const [values, setValues] = useState<string[][]>(
@@ -32,11 +32,11 @@ function App() {
   }, []);
 
   const resetGame = () => {
-    const newShuffledWords = [...words].sort(() => Math.random() - 0.5);
+    const { newShuffledWords, newWordKey, newValues, newRowStatuses } = resetGameState(words);
     setShuffledWords(newShuffledWords);
-    setWordKey(newShuffledWords[0]);
-    setValues(Array(6).fill(null).map(() => Array(5).fill("")));
-    setRowStatuses(Array(6).fill("locked").map((_, i) => (i === 0 ? "active" : "locked")));
+    setWordKey(newWordKey);
+    setValues(newValues);
+    setRowStatuses(newRowStatuses);
     setShowContinueButton(false);
     setShowRetryButton(false);
 
@@ -61,7 +61,6 @@ function App() {
 
   const handleKeyPress = (key: string) => {
     console.log("Tecla pressionada:", key);
-    // Adicione lógica para lidar com a tecla pressionada
   };
 
   return (

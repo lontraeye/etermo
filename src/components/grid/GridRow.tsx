@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import { normalizeWord, restoreAccents, compareWords } from "../../Utils"; // Importando as funções
+import { RowStatus } from "../../Types"; // Importando o tipo RowStatus
 import words from "../../words.json";
-
-type RowStatus = "active" | "completed" | "locked";
 
 interface GridRowProps {
   row: string[];
@@ -14,58 +14,6 @@ interface GridRowProps {
   onWin: () => void;
   onGameOver: () => void;
 }
-
-const normalizeWord = (word: string): string =>
-  word
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-const restoreAccents = (typedWord: string, keyWord: string): string => {
-  let result = "";
-  for (let i = 0; i < typedWord.length; i++) {
-    const typedChar = typedWord[i];
-    const keyChar = keyWord[i];
-    if (normalizeWord(typedChar) === normalizeWord(keyChar)) {
-      result += keyChar;
-    } else {
-      result += typedChar;
-    }
-  }
-  return result;
-};
-
-const compareWords = (typedWord: string, keyWord: string): string[] => {
-  const normalizedTyped = normalizeWord(typedWord);
-  const normalizedKey = normalizeWord(keyWord);
-
-  const colors = Array(normalizedTyped.length).fill("gray");
-  const letterCount: Record<string, number> = {};
-
-  for (const letter of normalizedKey) {
-    letterCount[letter] = (letterCount[letter] || 0) + 1;
-  }
-
-  for (let i = 0; i < normalizedTyped.length; i++) {
-    if (normalizedTyped[i] === normalizedKey[i]) {
-      colors[i] = "green";
-      letterCount[normalizedTyped[i]]--;
-    }
-  }
-
-  for (let i = 0; i < normalizedTyped.length; i++) {
-    if (
-      colors[i] === "gray" &&
-      normalizedKey.includes(normalizedTyped[i]) &&
-      letterCount[normalizedTyped[i]] > 0
-    ) {
-      colors[i] = "yellow";
-      letterCount[normalizedTyped[i]]--;
-    }
-  }
-
-  return colors;
-};
 
 const GridRow: React.FC<GridRowProps> = ({
   row,
@@ -83,7 +31,6 @@ const GridRow: React.FC<GridRowProps> = ({
 
   useEffect(() => {
     if (status === "active") {
-      // Apenas define o índice ativo inicial quando a linha é ativada
       const firstEmpty = values[rowIndex].findIndex((c) => c === "");
       setActiveIndex(firstEmpty === -1 ? row.length : firstEmpty);
     }
@@ -106,7 +53,6 @@ const GridRow: React.FC<GridRowProps> = ({
       if (e.key === "Backspace") {
         let newIndex = activeIndex;
 
-        // Se estamos no final e o campo atual está preenchido, apagamos ele mesmo
         if (activeIndex > 0 && !current[activeIndex]) {
           newIndex = activeIndex - 1;
         } else {
@@ -137,7 +83,7 @@ const GridRow: React.FC<GridRowProps> = ({
           const wordWithAccents = restoreAccents(word, wordKey);
           updated[rowIndex] = wordWithAccents.split("");
 
-          const allGreen = colors.every((c) => c === "green");
+          const allGreen: boolean = colors.every((c: string) => c === "green");
           const isLastRow = rowIndex === values.length - 1;
 
           setTimeout(() => {
@@ -164,7 +110,6 @@ const GridRow: React.FC<GridRowProps> = ({
           current[activeIndex] = e.key.toUpperCase();
           updated[rowIndex] = current;
 
-          // Se já estamos no último caractere, não avança mais
           const nextIndex =
             activeIndex === row.length - 1 ? activeIndex : activeIndex + 1;
 
@@ -183,7 +128,6 @@ const GridRow: React.FC<GridRowProps> = ({
     }
   }, [status, activeIndex]);
 
-  // Função para atualizar o activeIndex quando o quadrado for clicado
   const handleClick = (index: number) => {
     if (status === "active") {
       setActiveIndex(index);

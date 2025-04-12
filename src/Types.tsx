@@ -1,0 +1,1 @@
+export type RowStatus = "active" | "completed" | "locked";
