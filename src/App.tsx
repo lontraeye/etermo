@@ -3,6 +3,7 @@ import "./App.css";
 import GridRow from "./components/grid/GridRow";
 import Keyboard from "./components/keyboard/Keyboard";
 import GameOverModal from "./components/modal/GameOverModal";
+import DropdownMenu from "./components/dropdownmenu/DropdownMenu";
 import { RowStatus } from "./Types";
 import comuns from "./palavras-comuns.json";
 import words from "./words.json";
@@ -215,36 +216,39 @@ function App() {
   };
 
   return (
-    <div className="grid-container">
-      <h1>ETERMO</h1>
-      <div className="palavras" ref={containerRef}>
-        {values.map((row, rowIndex) => (
-          <GridRow
-            key={rowIndex}
-            row={row}
-            rowIndex={rowIndex}
-            values={values}
-            wordKey={wordKey}
-            status={rowStatuses[rowIndex]}
-            activeIndex={activeIndices[rowIndex]}
-            setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
-            isShaking={shakingRowIndex === rowIndex}
-            onRestoreAccents={handleRestoreAccents}
-            onRowCompleted={() =>
-              handleRowCompleted(rowIndex, values[rowIndex].join(""))
-            }
-          />
-        ))}
+    <div className="App">
+      <DropdownMenu />
+      <div className="grid-container">
+        <h1>ETERMO</h1>
+        <div className="palavras" ref={containerRef}>
+          {values.map((row, rowIndex) => (
+            <GridRow
+              key={rowIndex}
+              row={row}
+              rowIndex={rowIndex}
+              values={values}
+              wordKey={wordKey}
+              status={rowStatuses[rowIndex]}
+              activeIndex={activeIndices[rowIndex]}
+              setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
+              isShaking={shakingRowIndex === rowIndex}
+              onRestoreAccents={handleRestoreAccents}
+              onRowCompleted={() =>
+                handleRowCompleted(rowIndex, values[rowIndex].join(""))
+              }
+            />
+          ))}
+        </div>
+        <div className="keyboard-container">
+          <Keyboard onKeyPress={handleKeyPress} />
+        </div>
+        <GameOverModal
+          isOpen={gameStatus !== "playing"}
+          isWinner={gameStatus === "won"}
+          onClose={startNewGame}
+          wordKey={wordKey}
+        />
       </div>
-      <div className="keyboard-container">
-        <Keyboard onKeyPress={handleKeyPress} />
-      </div>
-      <GameOverModal
-        isOpen={gameStatus !== "playing"}
-        isWinner={gameStatus === "won"}
-        onClose={startNewGame}
-        wordKey={wordKey}
-      />
     </div>
   );
 }

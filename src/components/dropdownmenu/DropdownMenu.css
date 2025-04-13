@@ -1,0 +1,87 @@
+.dropdown-menu {
+    position: relative;
+    display: inline-block;
+    background-color: transparent;
+    user-select: none;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+  }
+  
+  .menu-button {
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    background-color: transparent;
+  }
+  
+  .menu-button.active {
+    background-color: #4C4347;
+    width: 100%;
+  }
+  
+  .menu-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #4C4347;
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+    z-index: 1000;
+    border-radius: 0 0 10px 10px;
+    width: max-content;
+    min-width: 150px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  
+  .menu-list li {
+    padding: 10px 15px;
+    cursor: pointer;
+  }
+  
+  .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .SwitchRoot {
+    all: unset;
+    width: 42px;
+    height: 25px;
+    background-color: #ccc;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+  
+  .SwitchRoot[data-state='checked'] {
+    background-color: #686064;
+  }
+  
+  .SwitchThumb {
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: white;
+    border-radius: 9999px;
+    transition: transform 0.2s;
+    transform: translateX(4px);
+    will-change: transform;
+    position: absolute;
+    top: 50%;
+    transform: translate(4px, -50%);
+  }
+  
+  .SwitchRoot[data-state='checked'] .SwitchThumb {
+    transform: translate(20px, -50%);
+  }
+  

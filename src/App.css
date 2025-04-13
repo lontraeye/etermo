@@ -12,6 +12,8 @@ h1 {
   margin-bottom: 1rem;
   color: #4C4347;
   cursor: default;
+  top: 0;
+  margin: 0;
 }
 
 ::selection {
