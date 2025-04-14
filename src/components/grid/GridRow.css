@@ -1,142 +1,124 @@
 .grid-container {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .grid {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    margin-top: 3px;
-  }
-  
-  .grid.passed {
-    opacity: 1;
-  }
-  
-  .grid.passed .grid-input {
-    background-color: #4C4347;
-    border-color: #4C4347;
-    color: white;
-  }
-  
-  .grid.inactive {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-  
-  .grid.inactive .grid-input {
-    background-color: #5f5a5c;
-    border-color: #5f5a5c;
-    opacity: 0.5;
-  }
-  
-  .grid.inactive .grid-input.green {
-    background-color: #6aaa64;
-    border-color: #6aaa64;
-    color: white;
-  }
-  
-  .grid.inactive .grid-input.yellow {
-    background-color: #c9b458;
-    border-color: #c9b458;
-    color: white;
-  }
-  
-  .grid-input {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 81px;
-    height: 81px;
-    text-align: center;
-    font-size: 52px;
-    border: 0.125em solid #4C4347;
-    border-radius: 10%;
-    box-sizing: border-box;
-    background-color: #998f8f;
-    caret-color: auto;
-    text-transform: uppercase;
-    font-weight: 900;
-    transition: background-color 0.3s ease;
-  }
-  
-  .grid-input.active {
-    border-bottom: 10px solid #4C4347;
-  }
-  
-  .grid .grid-input.green {
-    background-color: #6aaa64;
-    border-color: #6aaa64;
-    color: white;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  
-  .grid .grid-input.yellow {
-    background-color: #d3ad69;
-    border-color: #d3ad69;
-    color: white;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  
-  .grid .grid-input.gray {
-    background-color: #4C4347;
-    border-color: #4C4347;
-    color: white;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  
-  .grid-input.yellow {
-    background-color: #d3ad69;
-    border-color: #d3ad69;
-    color: white;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  
-  .grid-input.gray {
-    background-color: #4C4347;
-    border-color: #4C4347;
-    color: white;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-  }
-  
-  .grid-input:focus {
-    outline: none;
-    border-bottom: 0.25em solid #4C4347;
-    caret-color: transparent;
-  }
-  
-  .grid-input.shake {
-    animation: shake 0.3s ease-in-out;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+}
 
-.grid-input.locked {
+.grid {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 3px;
+}
+
+.grid-input {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 81px;
+  height: 81px;
+  font-size: 52px;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: white;
+  border-radius: 10%;
+  box-sizing: border-box;
+  perspective: 1000px;
+  position: relative;
+  background-color: transparent; /* Container transparente */
+  border: none; /* Removemos a borda do container */
+}
+
+/* Contêiner do flip */
+.grid-input .flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Faces do flip */
+.grid-input .flip-front,
+.grid-input .flip-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  border-radius: 10%;
+  border: 2px solid #4C4347; /* Borda apenas nas faces */
+  box-sizing: border-box;
+}
+
+/* Face frontal */
+.grid-input .flip-front {
+  background-color: #998f8f;
+  transform: rotateX(0deg);
+  z-index: 2; /* Garante que a frente fique sobreposta durante a animação */
+}
+
+/* Face traseira */
+.grid-input .flip-back {
+  background-color: #4C4347;
+  transform: rotateX(180deg);
+  z-index: 1;
+}
+
+/* Estado flipped */
+.grid-input.flipped .flip-inner {
+  transform: rotateX(180deg);
+}
+
+/* Cores para o verso */
+.grid-input.green .flip-back {
   background-color: #6aaa64;
   border-color: #6aaa64;
-  color: white;
-  cursor: not-allowed;
-  pointer-events: none;
+}
+
+.grid-input.yellow .flip-back {
+  background-color: #d3ad69;
+  border-color: #d3ad69;
+}
+
+.grid-input.gray .flip-back {
+  background-color: #4C4347;
+  border-color: #4C4347;
+}
+
+/* Estado ativo */
+.grid-input.active .flip-front {
+  border-bottom: 10px solid #4C4347;
+}
+
+/* Estado bloqueado */
+.grid-input.locked .flip-front {
+  background-color: #6aaa64;
+  border-color: #6aaa64;
 }
 
 
-  
-  @keyframes gentleShake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-  }
-  
-  .grid.shake {
-    animation: gentleShake 0.2s ease-in-out both;
-  }
+/* Animações */
+@keyframes gentleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
 
-  @media (max-width: 768px) {
-    .grid-input {
-      max-width: 4rem;
-      height: 4rem;
-      font-size: 32px;
-    }
+.grid.shake {
+  animation: gentleShake 0.2s ease-in-out both;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .grid-input {
+    width: 60px;
+    height: 60px;
+    font-size: 32px;
+    perspective: 500px;
   }
+}

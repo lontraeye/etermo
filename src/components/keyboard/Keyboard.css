@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .keyboard-row {

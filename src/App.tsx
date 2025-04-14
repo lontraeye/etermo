@@ -19,6 +19,7 @@ function App() {
   const [absentLetters, setAbsentLetters] = useState<string[]>([]);
   const [correctLetters, setCorrectLetters] = useState<string[]>([]);
   const [presentLetters, setPresentLetters] = useState<string[]>([]);
+  const [gameReset, setGameReset] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -75,6 +76,9 @@ function App() {
 
   const startNewGame = () => {
     const availableWords = comuns.filter((word) => !usedWords.includes(word));
+
+    setGameReset(true);
+    setTimeout(() => setGameReset(false), 0);
 
     if (availableWords.length === 0) {
       setUsedWords([]);
@@ -237,10 +241,14 @@ function App() {
         });
 
         setAbsentLetters((prev) => [
-          ...new Set([...prev, ...newAbsentLetters.filter(
-            letter => !newCorrectLetters.includes(letter) && 
-                     !newPresentLetters.includes(letter)
-          )]),
+          ...new Set([
+            ...prev,
+            ...newAbsentLetters.filter(
+              (letter) =>
+                !newCorrectLetters.includes(letter) &&
+                !newPresentLetters.includes(letter)
+            ),
+          ]),
         ]);
 
         setCorrectLetters((prev) => [
@@ -248,9 +256,12 @@ function App() {
         ]);
 
         setPresentLetters((prev) => [
-          ...new Set([...prev, ...newPresentLetters.filter(
-            letter => !newCorrectLetters.includes(letter)
-          )]),
+          ...new Set([
+            ...prev,
+            ...newPresentLetters.filter(
+              (letter) => !newCorrectLetters.includes(letter)
+            ),
+          ]),
         ]);
 
         setRowStatuses((prev) => {
@@ -376,7 +387,7 @@ function App() {
         <div className="palavras" ref={containerRef}>
           {values.map((row, rowIndex) => (
             <GridRow
-              key={rowIndex}
+              key={`row-${rowIndex}-${gameReset}`}
               row={row}
               rowIndex={rowIndex}
               values={values}
