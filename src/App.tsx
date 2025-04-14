@@ -16,6 +16,7 @@ function App() {
       .map(() => Array(5).fill(""))
   );
   const [isHardMode, setIsHardMode] = useState(false);
+  const [absentLetters, setAbsentLetters] = useState<string[]>([]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -96,6 +97,7 @@ function App() {
     );
     setActiveIndices(Array(6).fill(0));
     setGameStatus("playing");
+    setAbsentLetters([]);
     console.log("Nova palavra chave:", randomWord);
   };
 
@@ -114,7 +116,7 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handlePhysicalKeyDown);
     };
-  }, [values, rowStatuses, activeIndices, isHardMode]);
+  }, [values, rowStatuses, activeIndices, isHardMode, absentLetters]);
 
   const getLetterHints = (
     row: string[],
@@ -213,6 +215,16 @@ function App() {
 
         const isCorrect = normalizeWord(word) === normalizeWord(wordKey);
 
+        // Atualizar letras ausentes
+        const hints = getLetterHints(newRow, wordKey);
+        const newAbsentLetters = hints
+          .map((hint, i) => (hint === "absent" ? normalizeWord(newRow[i]) : ""))
+          .filter((letter) => letter !== "");
+
+        setAbsentLetters((prev) => [
+          ...new Set([...prev, ...newAbsentLetters]),
+        ]);
+
         setRowStatuses((prev) => {
           const newRowStatuses = [...prev];
           newRowStatuses[currentRowIndex] = "completed";
@@ -244,6 +256,12 @@ function App() {
         return;
       }
     } else if (key.length === 1) {
+      const normalizedKey = normalizeWord(key);
+      if (isHardMode && absentLetters.includes(normalizedKey)) {
+        triggerShakeAnimation(currentRowIndex);
+        return;
+      }
+
       if (currentIndex < currentRow.length && !correctLetters[currentIndex]) {
         currentRow[currentIndex] = key.toLowerCase();
 
@@ -350,7 +368,11 @@ function App() {
           ))}
         </div>
         <div className="keyboard-container">
-          <Keyboard onKeyPress={handleKeyPress} />
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            absentLetters={absentLetters}
+            isHardMode={isHardMode}
+          />
         </div>
         <GameOverModal
           isOpen={gameStatus !== "playing"}

@@ -27,7 +27,33 @@
   height: 5rem;
   width: 5rem;
   box-sizing: border-box;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.keyboard-key:hover:not(:disabled) {
+  background-color: #5a5155;
+}
+
+.keyboard-key:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.keyboard-key.special {
+  background-color: #4C4347;
+}
+
+.keyboard-key.absent {
+  background-color: #3a3235;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.keyboard-key:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .keyboard-container {
@@ -50,13 +76,13 @@
     width: 3rem;
     max-width: 2rem;
     margin: 0;
-    color: white;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   .keyboard-key.special {
     width: fit-content;
     max-width: 5rem;
+    padding: 0 10px;
   }
 
   .keyboard-container {
