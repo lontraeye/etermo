@@ -15,6 +15,7 @@ function App() {
       .fill(null)
       .map(() => Array(5).fill(""))
   );
+  const [isHardMode, setIsHardMode] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -64,7 +65,7 @@ function App() {
     if (containerRef.current && activeRowIndex !== -1) {
       const rowElement = containerRef.current.children[
         activeRowIndex + 1
-      ] as HTMLElement; // +1 por causa do h1
+      ] as HTMLElement;
       rowElement?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [rowStatuses]);
@@ -113,7 +114,44 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handlePhysicalKeyDown);
     };
-  }, [values, rowStatuses, activeIndices]);
+  }, [values, rowStatuses, activeIndices, isHardMode]);
+
+  const getLetterHints = (
+    row: string[],
+    key: string
+  ): ("correct" | "present" | "absent")[] => {
+    const hints: ("correct" | "present" | "absent")[] = [];
+    const keyLetters = key.split("");
+    const rowLetters = row;
+
+    for (let i = 0; i < rowLetters.length; i++) {
+      if (normalizeWord(rowLetters[i]) === normalizeWord(keyLetters[i])) {
+        hints.push("correct");
+      } else if (
+        keyLetters.some(
+          (letter) => normalizeWord(letter) === normalizeWord(rowLetters[i])
+        )
+      ) {
+        hints.push("present");
+      } else {
+        hints.push("absent");
+      }
+    }
+
+    return hints;
+  };
+
+  const getCorrectLettersFromPreviousRow = (rowIndex: number): string[] => {
+    if (!isHardMode || rowIndex === 0) return Array(5).fill("");
+
+    const previousRowIndex = rowIndex - 1;
+    if (rowStatuses[previousRowIndex] !== "completed") return Array(5).fill("");
+
+    const previousRow = values[previousRowIndex];
+    const hints = getLetterHints(previousRow, wordKey);
+
+    return hints.map((hint, i) => (hint === "correct" ? previousRow[i] : ""));
+  };
 
   const handleKeyPress = (key: string) => {
     if (gameStatus !== "playing") return;
@@ -125,23 +163,43 @@ function App() {
 
     const currentRow = [...values[currentRowIndex]];
     const currentIndex = activeIndices[currentRowIndex];
+    const correctLetters = getCorrectLettersFromPreviousRow(currentRowIndex);
 
     if (key === "Backspace") {
-      if (currentRow[currentIndex]) {
+      if (currentRow[currentIndex] && !correctLetters[currentIndex]) {
         currentRow[currentIndex] = "";
-      } else if (currentIndex > 0) {
+      } else if (currentIndex > 0 && !correctLetters[currentIndex - 1]) {
         currentRow[currentIndex - 1] = "";
         updateActiveIndex(currentRowIndex, currentIndex - 1);
       }
     } else if (key === "Enter") {
-      if (currentRow.every((cell) => cell !== "")) {
-        const word = currentRow.join("");
+      const submittedRow = currentRow.map((char, index) =>
+        correctLetters[index] ? correctLetters[index] : char
+      );
+
+      if (submittedRow.every((cell) => cell !== "")) {
+        const word = submittedRow.join("");
         const normalizedWord = normalizeWord(word);
 
         const validWords = [...words, ...comuns].map((w) => normalizeWord(w));
         if (!validWords.includes(normalizedWord)) {
           triggerShakeAnimation(currentRowIndex);
           return;
+        }
+
+        if (isHardMode && currentRowIndex > 0) {
+          const previousRow = values[currentRowIndex - 1];
+          const previousHints = getLetterHints(previousRow, wordKey);
+
+          for (let i = 0; i < previousHints.length; i++) {
+            if (
+              previousHints[i] === "correct" &&
+              submittedRow[i] !== previousRow[i]
+            ) {
+              triggerShakeAnimation(currentRowIndex);
+              return;
+            }
+          }
         }
 
         const wordWithAccents = restoreAccents(word, wordKey);
@@ -153,28 +211,48 @@ function App() {
           return newValues;
         });
 
-        if (currentRowIndex < 5) {
-          setRowStatuses((prev) => {
-            const newRowStatuses = [...prev];
-            newRowStatuses[currentRowIndex] = "completed";
+        const isCorrect = normalizeWord(word) === normalizeWord(wordKey);
+
+        setRowStatuses((prev) => {
+          const newRowStatuses = [...prev];
+          newRowStatuses[currentRowIndex] = "completed";
+
+          if (!isCorrect && currentRowIndex < 5) {
             newRowStatuses[currentRowIndex + 1] = "active";
-            return newRowStatuses;
-          });
-          updateActiveIndex(currentRowIndex + 1, 0);
+          }
+          return newRowStatuses;
+        });
+
+        if (isCorrect) {
+          setGameStatus("won");
+          return;
+        }
+
+        if (currentRowIndex < 5) {
+          const newCorrectLetters = isHardMode
+            ? getCorrectLettersFromPreviousRow(currentRowIndex + 1)
+            : Array(5).fill("");
+
+          let firstNonLocked = 0;
+          while (firstNonLocked < 5 && newCorrectLetters[firstNonLocked]) {
+            firstNonLocked++;
+          }
+          updateActiveIndex(currentRowIndex + 1, Math.min(firstNonLocked, 4));
         } else {
-          setRowStatuses((prev) => {
-            const newRowStatuses = [...prev];
-            newRowStatuses[currentRowIndex] = "completed";
-            return newRowStatuses;
-          });
+          setGameStatus("lost");
         }
         return;
       }
     } else if (key.length === 1) {
-      if (currentIndex < currentRow.length) {
+      if (currentIndex < currentRow.length && !correctLetters[currentIndex]) {
         currentRow[currentIndex] = key.toLowerCase();
-        if (currentIndex < 4) {
-          updateActiveIndex(currentRowIndex, currentIndex + 1);
+
+        let nextIndex = currentIndex + 1;
+        while (nextIndex < 5 && correctLetters[nextIndex]) {
+          nextIndex++;
+        }
+        if (nextIndex < 5) {
+          updateActiveIndex(currentRowIndex, nextIndex);
         }
       }
     }
@@ -186,7 +264,14 @@ function App() {
     });
   };
 
-  const handleRowCompleted = (rowIndex: number, completedWord: string) => {
+  const handleRowCompleted = (rowIndex: number) => {
+    const correctLetters = getCorrectLettersFromPreviousRow(rowIndex);
+    const completedWord = values[rowIndex]
+      .map((char, index) =>
+        correctLetters[index] ? correctLetters[index] : char
+      )
+      .join("");
+
     if (normalizeWord(completedWord) === normalizeWord(wordKey)) {
       setGameStatus("won");
     } else if (rowIndex === 5) {
@@ -210,14 +295,36 @@ function App() {
   const updateActiveIndex = (rowIndex: number, index: number) => {
     setActiveIndices((prev) => {
       const updated = [...prev];
-      updated[rowIndex] = index;
+      if (isHardMode && rowIndex > 0) {
+        const correctLetters = getCorrectLettersFromPreviousRow(rowIndex);
+        let firstNonLocked = index;
+        while (firstNonLocked < 5 && correctLetters[firstNonLocked]) {
+          firstNonLocked++;
+        }
+        updated[rowIndex] = Math.min(firstNonLocked, 4);
+      } else {
+        updated[rowIndex] = index;
+      }
       return updated;
     });
   };
 
+  const onHardModeToggle = () => {
+    setIsHardMode((prev) => !prev);
+    console.log("Modo difícil:", !isHardMode);
+  };
+
+  const hasSubmittedWords = () => {
+    return rowStatuses.some((status) => status === "completed");
+  };
+
   return (
     <div className="App">
-      <DropdownMenu />
+      <DropdownMenu
+        isHardMode={isHardMode}
+        onHardModeToggle={onHardModeToggle}
+        disabled={hasSubmittedWords()}
+      />
       <div className="grid-container">
         <h1>ETERMO</h1>
         <div className="palavras" ref={containerRef}>
@@ -233,9 +340,12 @@ function App() {
               setActiveIndex={(index) => updateActiveIndex(rowIndex, index)}
               isShaking={shakingRowIndex === rowIndex}
               onRestoreAccents={handleRestoreAccents}
-              onRowCompleted={() =>
-                handleRowCompleted(rowIndex, values[rowIndex].join(""))
-              }
+              onRowCompleted={() => handleRowCompleted(rowIndex)}
+              isHardMode={isHardMode}
+              correctLettersFromPreviousRow={getCorrectLettersFromPreviousRow(
+                rowIndex
+              )}
+              isGameWon={gameStatus === "won"}
             />
           ))}
         </div>

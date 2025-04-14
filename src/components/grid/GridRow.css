@@ -112,6 +112,16 @@
   .grid-input.shake {
     animation: shake 0.3s ease-in-out;
   }
+
+.grid-input.locked {
+  background-color: #6aaa64;
+  color: white;
+  cursor: not-allowed;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+
   
   @keyframes gentleShake {
     0%, 100% { transform: translateX(0); }

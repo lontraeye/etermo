@@ -14,6 +14,9 @@ interface GridRowProps {
   isShaking: boolean;
   onRestoreAccents?: (rowIndex: number, restoredWord: string) => void;
   onRowCompleted?: () => void;
+  isHardMode: boolean;
+  correctLettersFromPreviousRow?: string[];
+  isGameWon?: boolean;
 }
 
 const GridRow: React.FC<GridRowProps> = ({
@@ -27,8 +30,12 @@ const GridRow: React.FC<GridRowProps> = ({
   isShaking,
   onRestoreAccents,
   onRowCompleted,
+  isHardMode,
+  correctLettersFromPreviousRow = [],
+  isGameWon = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevStatusRef = useRef<RowStatus | undefined>(undefined);
 
   useEffect(() => {
     if (isShaking && containerRef.current) {
@@ -58,10 +65,35 @@ const GridRow: React.FC<GridRowProps> = ({
     }
   }, [status, values, wordKey, rowIndex, onRestoreAccents, onRowCompleted]);
 
+  useEffect(() => {
+    const becameActiveDueToRowChange = 
+      (prevStatusRef.current === "completed" || prevStatusRef.current === "locked") && 
+      status === "active";
+    
+    if (becameActiveDueToRowChange && !isGameWon) {
+      const firstUnlockedIndex = correctLettersFromPreviousRow.findIndex(
+        (letter) => !(isHardMode && letter)
+      );
+      
+      if (firstUnlockedIndex !== -1) {
+        setActiveIndex(firstUnlockedIndex);
+      }
+    }
+
+    prevStatusRef.current = status;
+  }, [status, isHardMode, correctLettersFromPreviousRow, setActiveIndex, isGameWon]);
+
   const handleClick = (index: number) => {
     if (status === "active") {
-      setActiveIndex(index);
+      if (!isHardMode || !correctLettersFromPreviousRow[index] || isGameWon) {
+        setActiveIndex(index);
+      }
     }
+  };
+
+  const shouldShowLockedLetter = (colIndex: number) => {
+    if (isGameWon) return false;
+    return isHardMode && correctLettersFromPreviousRow[colIndex];
   };
 
   return (
@@ -81,15 +113,17 @@ const GridRow: React.FC<GridRowProps> = ({
           color = colors[colIndex];
         }
 
+        const showLockedLetter = shouldShowLockedLetter(colIndex);
+        
         return (
           <div
             key={colIndex}
             className={`grid-input ${color} ${
               activeIndex === colIndex && status === "active" ? "active" : ""
-            }`}
+            } ${showLockedLetter ? "locked" : ""}`}
             onClick={() => handleClick(colIndex)}
           >
-            {value}
+            {showLockedLetter ? correctLettersFromPreviousRow[colIndex] : value}
           </div>
         );
       })}

@@ -1,9 +1,19 @@
-// DropdownMenu.tsx
 import React, { useState } from "react";
 import { FaCog } from "react-icons/fa";
+import Switch from "../switch/Switch";
 import "./DropdownMenu.css";
 
-const DropdownMenu: React.FC = () => {
+interface DropdownMenuProps {
+  isHardMode: boolean;
+  onHardModeToggle: () => void;
+  disabled?: boolean;
+}
+
+const DropdownMenu: React.FC<DropdownMenuProps> = ({ 
+  isHardMode, 
+  onHardModeToggle,
+  disabled = false
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -20,10 +30,12 @@ const DropdownMenu: React.FC = () => {
       </button>
       <ul className={`menu-list ${isOpen ? "open" : ""}`}>
         <li className="menu-item">
-          <span>Difícil</span>
-          <div className="SwitchRoot">
-            <div className="SwitchThumb" />
-          </div>
+          <span>Modo Difícil</span>
+          <Switch 
+            isOn={isHardMode} 
+            handleToggle={disabled ? () => {} : onHardModeToggle} 
+            disabled={disabled}
+          />
         </li>
       </ul>
     </div>

@@ -53,37 +53,3 @@
     justify-content: center;
     gap: 2rem;
   }
-
-  .SwitchRoot {
-    all: unset;
-    width: 42px;
-    height: 25px;
-    background-color: #ccc;
-    border-radius: 9999px;
-    position: relative;
-    transition: background-color 0.2s;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  .SwitchRoot[data-state='checked'] {
-    background-color: #686064;
-  }
-  
-  .SwitchThumb {
-    display: block;
-    width: 18px;
-    height: 18px;
-    background-color: white;
-    border-radius: 9999px;
-    transition: transform 0.2s;
-    transform: translateX(4px);
-    will-change: transform;
-    position: absolute;
-    top: 50%;
-    transform: translate(4px, -50%);
-  }
-  
-  .SwitchRoot[data-state='checked'] .SwitchThumb {
-    transform: translate(20px, -50%);
-  }
