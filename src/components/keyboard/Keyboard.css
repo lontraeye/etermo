@@ -51,6 +51,18 @@
   cursor: not-allowed;
 }
 
+.keyboard-key.correct {
+  background-color: #6aaa64;
+  border-color: #6aaa64;
+  color: white;
+}
+
+.keyboard-key.present {
+  background-color: #d3ad69;
+  border-color: #d3ad69;
+  color: white;
+}
+
 .keyboard-key:disabled {
   opacity: 0.6;
   cursor: not-allowed;

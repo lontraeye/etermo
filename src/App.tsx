@@ -17,6 +17,8 @@ function App() {
   );
   const [isHardMode, setIsHardMode] = useState(false);
   const [absentLetters, setAbsentLetters] = useState<string[]>([]);
+  const [correctLetters, setCorrectLetters] = useState<string[]>([]);
+  const [presentLetters, setPresentLetters] = useState<string[]>([]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -98,6 +100,8 @@ function App() {
     setActiveIndices(Array(6).fill(0));
     setGameStatus("playing");
     setAbsentLetters([]);
+    setCorrectLetters([]);
+    setPresentLetters([]);
     console.log("Nova palavra chave:", randomWord);
   };
 
@@ -214,15 +218,39 @@ function App() {
         });
 
         const isCorrect = normalizeWord(word) === normalizeWord(wordKey);
-
-        // Atualizar letras ausentes
         const hints = getLetterHints(newRow, wordKey);
-        const newAbsentLetters = hints
-          .map((hint, i) => (hint === "absent" ? normalizeWord(newRow[i]) : ""))
-          .filter((letter) => letter !== "");
+
+        // Update letter states
+        const newAbsentLetters: string[] = [];
+        const newCorrectLetters: string[] = [];
+        const newPresentLetters: string[] = [];
+
+        hints.forEach((hint, i) => {
+          const normalizedLetter = normalizeWord(newRow[i]);
+          if (hint === "absent") {
+            newAbsentLetters.push(normalizedLetter);
+          } else if (hint === "correct") {
+            newCorrectLetters.push(normalizedLetter);
+          } else if (hint === "present") {
+            newPresentLetters.push(normalizedLetter);
+          }
+        });
 
         setAbsentLetters((prev) => [
-          ...new Set([...prev, ...newAbsentLetters]),
+          ...new Set([...prev, ...newAbsentLetters.filter(
+            letter => !newCorrectLetters.includes(letter) && 
+                     !newPresentLetters.includes(letter)
+          )]),
+        ]);
+
+        setCorrectLetters((prev) => [
+          ...new Set([...prev, ...newCorrectLetters]),
+        ]);
+
+        setPresentLetters((prev) => [
+          ...new Set([...prev, ...newPresentLetters.filter(
+            letter => !newCorrectLetters.includes(letter)
+          )]),
         ]);
 
         setRowStatuses((prev) => {
@@ -371,6 +399,8 @@ function App() {
           <Keyboard
             onKeyPress={handleKeyPress}
             absentLetters={absentLetters}
+            correctLetters={correctLetters}
+            presentLetters={presentLetters}
             isHardMode={isHardMode}
           />
         </div>

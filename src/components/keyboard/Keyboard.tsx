@@ -12,12 +12,16 @@ const keys = [
 interface KeyboardProps {
   onKeyPress: (key: string) => void;
   absentLetters?: string[];
+  correctLetters?: string[];
+  presentLetters?: string[];
   isHardMode?: boolean;
 }
 
 const Keyboard: React.FC<KeyboardProps> = ({ 
   onKeyPress, 
   absentLetters = [], 
+  correctLetters = [],
+  presentLetters = [],
   isHardMode = false 
 }) => {
   return (
@@ -27,6 +31,8 @@ const Keyboard: React.FC<KeyboardProps> = ({
           {row.map((key) => {
             const normalizedKey = normalizeWord(key);
             const isAbsent = isHardMode && absentLetters.includes(normalizedKey);
+            const isCorrect = correctLetters.includes(normalizedKey);
+            const isPresent = presentLetters.includes(normalizedKey);
             const isSpecialKey = key === "Enter" || key === "Backspace";
             
             return (
@@ -34,7 +40,9 @@ const Keyboard: React.FC<KeyboardProps> = ({
                 key={key}
                 className={`keyboard-key ${
                   isSpecialKey ? "special" : ""
-                } ${isAbsent ? "absent" : ""}`}
+                } ${isAbsent ? "absent" : ""} ${
+                  isCorrect ? "correct" : ""
+                } ${isPresent ? "present" : ""}`}
                 onClick={() => onKeyPress(key)}
                 disabled={isAbsent}
                 aria-disabled={isAbsent}
