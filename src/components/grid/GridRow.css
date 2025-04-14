@@ -115,10 +115,10 @@
 
 .grid-input.locked {
   background-color: #6aaa64;
+  border-color: #6aaa64;
   color: white;
   cursor: not-allowed;
   pointer-events: none;
-  font-weight: bold;
 }
 
 
