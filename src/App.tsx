@@ -224,7 +224,6 @@ function App() {
         const isCorrect = normalizeWord(word) === normalizeWord(wordKey);
         const hints = getLetterHints(newRow, wordKey);
 
-        // Update letter states
         const newAbsentLetters: string[] = [];
         const newCorrectLetters: string[] = [];
         const newPresentLetters: string[] = [];
@@ -240,30 +239,33 @@ function App() {
           }
         });
 
-        setAbsentLetters((prev) => [
-          ...new Set([
-            ...prev,
+        // Atualiza correctLetters, nunca remove letras já corretas
+        setCorrectLetters((prev) => {
+          const updated = new Set([...prev, ...newCorrectLetters]);
+          return Array.from(updated);
+        });
+
+        setPresentLetters((prev) => {
+          const updated = new Set([
+            ...prev.filter((l) => !newCorrectLetters.includes(l)),
+            ...newPresentLetters.filter((l) => !newCorrectLetters.includes(l)),
+          ]);
+          return Array.from(updated);
+        });
+
+        setAbsentLetters((prev) => {
+          const updated = new Set([
+            ...prev.filter(
+              (l) =>
+                !newCorrectLetters.includes(l) && !newPresentLetters.includes(l)
+            ),
             ...newAbsentLetters.filter(
-              (letter) =>
-                !newCorrectLetters.includes(letter) &&
-                !newPresentLetters.includes(letter)
+              (l) =>
+                !newCorrectLetters.includes(l) && !newPresentLetters.includes(l)
             ),
-          ]),
-        ]);
-
-        setCorrectLetters((prev) => [
-          ...new Set([...prev, ...newCorrectLetters]),
-        ]);
-
-        setPresentLetters((prev) => [
-          ...new Set([
-            ...prev,
-            ...newPresentLetters.filter(
-              (letter) => !newCorrectLetters.includes(letter)
-            ),
-          ]),
-        ]);
-
+          ]);
+          return Array.from(updated);
+        });
         setRowStatuses((prev) => {
           const newRowStatuses = [...prev];
           newRowStatuses[currentRowIndex] = "completed";
@@ -280,15 +282,7 @@ function App() {
         }
 
         if (currentRowIndex < 5) {
-          const newCorrectLetters = isHardMode
-            ? getCorrectLettersFromPreviousRow(currentRowIndex + 1)
-            : Array(5).fill("");
-
-          let firstNonLocked = 0;
-          while (firstNonLocked < 5 && newCorrectLetters[firstNonLocked]) {
-            firstNonLocked++;
-          }
-          updateActiveIndex(currentRowIndex + 1, Math.min(firstNonLocked, 4));
+          updateActiveIndex(currentRowIndex + 1, 0);
         } else {
           setGameStatus("lost");
         }
@@ -352,16 +346,17 @@ function App() {
   const updateActiveIndex = (rowIndex: number, index: number) => {
     setActiveIndices((prev) => {
       const updated = [...prev];
-      if (isHardMode && rowIndex > 0) {
-        const correctLetters = getCorrectLettersFromPreviousRow(rowIndex);
-        let firstNonLocked = index;
-        while (firstNonLocked < 5 && correctLetters[firstNonLocked]) {
-          firstNonLocked++;
-        }
-        updated[rowIndex] = Math.min(firstNonLocked, 4);
-      } else {
-        updated[rowIndex] = index;
+      const correctLetters =
+        isHardMode && rowIndex > 0
+          ? getCorrectLettersFromPreviousRow(rowIndex)
+          : Array(5).fill("");
+
+      let newIndex = index;
+      while (newIndex < 5 && correctLetters[newIndex]) {
+        newIndex++;
       }
+
+      updated[rowIndex] = newIndex < 5 ? newIndex : 4;
       return updated;
     });
   };

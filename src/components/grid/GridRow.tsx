@@ -58,7 +58,6 @@ const GridRow: React.FC<GridRowProps> = ({
 
   useEffect(() => {
     if (status === "completed" && prevStatusRef.current !== "completed") {
-      // Reset flipped indices when row becomes completed
       setFlippedIndices([]);
 
       const currentWord = values[rowIndex].join("");
@@ -73,8 +72,7 @@ const GridRow: React.FC<GridRowProps> = ({
         onRowCompleted();
       }
 
-      // Trigger flip animations sequentially
-      const flipDelay = 200; // milliseconds between each flip
+      const flipDelay = 200;
       row.forEach((_, index) => {
         setTimeout(() => {
           setFlippedIndices((prev) => [...prev, index]);
